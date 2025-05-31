@@ -29,6 +29,7 @@ const Chimera = function (...args: Args<typeof Animal>) {
     class Mixin {
         constructor(...args: Args<typeof Animal>) {
             ;[Dog, Cat].forEach(Class => {
+                // @ts-expect-error:
                 Object.assign(this, new Class())
             })
             Object.assign(this, new Animal(...args))
@@ -37,6 +38,7 @@ const Chimera = function (...args: Args<typeof Animal>) {
     ;[Dog, Cat].forEach(Class => {
         Object.getOwnPropertyNames(Class.prototype)
         .filter(p => p != "constructor")
+        // @ts-expect-error:
         .forEach(p => Mixin.prototype[p] = Class.prototype[p])
     })
     return new Mixin(...args)

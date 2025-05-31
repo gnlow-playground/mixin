@@ -1,6 +1,11 @@
 class Animal {
     name
+    get age() {
+        console.log("Who get my age?")
+        return 123
+    }
     constructor(name: string) {
+        console.log("I'm being constructed!")
         this.name = name
     }
 }
@@ -28,18 +33,22 @@ interface Chimera extends Dog, Cat {}
 const Chimera = function (...args: Args<typeof Animal>) {
     class Mixin {
         constructor(...args: Args<typeof Animal>) {
-            ;[Dog, Cat].forEach(Class => {
-                // @ts-expect-error:
-                Object.assign(this, new Class())
+            ;[Dog, Cat, Animal].forEach(Class => {
+                Object.defineProperties(this,
+                    Object.getOwnPropertyDescriptors(new Class(...args))
+                )
             })
-            Object.assign(this, new Animal(...args))
         }
     }
-    ;[Dog, Cat].forEach(Class => {
-        Object.getOwnPropertyNames(Class.prototype)
-        .filter(p => p != "constructor")
-        // @ts-expect-error:
-        .forEach(p => Mixin.prototype[p] = Class.prototype[p])
+    ;[Dog, Cat, Animal].forEach(Class => {
+        const desc = Object.getOwnPropertyDescriptors(Class.prototype)
+
+        const filtered = Object.fromEntries(
+            Object.entries(desc)
+            .filter(([k]) => k != "constructor")
+        )
+
+        Object.defineProperties(Mixin.prototype, filtered)
     })
     return new Mixin(...args)
 } as unknown as { new(...args: Args<typeof Animal>): Chimera }
@@ -47,4 +56,5 @@ const Chimera = function (...args: Args<typeof Animal>) {
 const chimera = new Chimera("John")
 
 console.log(chimera)
+console.log(chimera.age)
 chimera.bark()
